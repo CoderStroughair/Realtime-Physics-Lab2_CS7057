@@ -24,6 +24,7 @@ const float width = 800, height = 800;
 #define SIGN_MESH		"../Meshes/sign.obj"
 #define BUDDHA_MESH		"../Meshes/buddha.dae"
 #define PARTICLE_MESH	"../Meshes/particle.dae"
+#define CUBE_MESH		"../Meshes/cube.obj"
 
 
 #define BEAR_TEXTURE	"../Textures/bear.tga"
@@ -38,7 +39,7 @@ const float width = 800, height = 800;
 
 
 Mesh monkeyhead_object, torch_object, wall_object, cube, bear_object, signReflect_object, signRefract_object, signNormal_object;
-Mesh gem_object, sphere_object, particle_object;
+Mesh gem_object, sphere_object, particle_object, cube_object;
 
 
 //Cube Vertices for the Skybox
@@ -128,7 +129,7 @@ vec3 startingFront = { 0.0f, 0.0f, 1.0f };
 GLfloat pitCam = 0, yawCam = 0, rolCam = 0, frontCam = 0, sideCam = 0, speed = 1;
 float rotateY = 50.0f, rotateLight = 0.0f;
 Camera cam(startingPos, startingFront, vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f, 0.0f);
-
+RigidBody body;
 /*----------------------------------------------------------------------------
 							OTHER VARIABLES
 ----------------------------------------------------------------------------*/
@@ -139,10 +140,9 @@ const char* atlas_meta = "../freemono.meta";
 float fontSize = 25.0f;
 int textID = -1;
 void drawloop(mat4 view, mat4 proj, GLuint framebuffer);
+bool torque = false;
+bool force = false;
 
-bool simple = true, mesh = true;
-
-ParticleSystem ps;
 /*--------------------------------------------------------------------------*/
 
 void init()
@@ -180,8 +180,9 @@ void init()
 	sphere_object.init(SPHERE_MESH);
 	gem_object.init(GEM_MESH);
 	particle_object.init(GEM_MESH);
+	cube_object.init(CUBE_MESH);
 
-	ps.init(1000, particle_object);
+	body = RigidBody(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0), 5, 1.0, 1.0, 1.0, cube_object);
 }
 
 void display() 
@@ -213,21 +214,19 @@ void updateScene() {
 	{
 		last_frame = curr_time;
 		glutPostRedisplay();
-		rotateY = rotateY + 0.5f;
 		rotateLight = rotateLight + 0.01f;
-		if (rotateY >= 360.0f)
-			rotateY = 0.0f;
 		if (rotateLight >= 360.0f)
 			rotateLight = 0.0f;
+
+		body.force = vec3(0.0, 0.0, 0.0);
+		body.torque = vec3(0.0, 0.0, 0.0);
+		body.addForce(vec3(50.0, 0.0, 0.0)*torque, vec3(0.5, 0.0, 0.5));
+		body.addForce(vec3(2.0, 50.0, 0.0)*force, vec3(0.0, 1.0, 0.0));
 		cam.movForward(frontCam*speed);
 		cam.movRight(sideCam*speed);
 		cam.changeFront(pitCam, yawCam, rolCam);
-		ps.applyForces(delta);
-		ps.checkCollisions(vec3(0.0, -6.5, 0.0), vec3(0.0, 0.5, -0.5), delta);
-		ps.checkCollisions(vec3(0.0, -6.5, 0.0), vec3(0.0, 0.5, 0.5), delta);
-		ps.checkCollisions(vec3(0.0, -6.5, 0.0), vec3(0.5, 0.5, 0.0), delta);
-		ps.checkCollisions(vec3(0.0, -6.5, 0.0), vec3(-0.5, 0.5, 0.0), delta);
-		ps.checkCollisions(vec3(0.0, +2.5, 0.0), vec3(0.0, 1.0, 0.0), delta);
+
+		body.resolveForce(delta);
 	}
 	
 }
@@ -248,18 +247,10 @@ void keypress(unsigned char key, int x, int y)
 		sideCam = -1;
 	else if ((key == 'd') || (key == 'D'))
 		sideCam = 1;
-	if (key == ' ')
-	{
-		simple = !simple;
-		if (simple)
-			update_text(textID, "Simplified Version - This only shows a single cubemap");
-		else
-			update_text(textID, "Complex Version - This shows the use of all four cubemaps");
-	}
-	if (key == 'm')
-	{
-		mesh = !mesh;
-	}
+	if ((key == 't') || (key == 'T'))
+		torque = true;
+	if ((key == 'f') || (key == 'F'))
+		force = true;
 }
 
 void keypressUp(unsigned char key, int x, int y)
@@ -272,6 +263,12 @@ void keypressUp(unsigned char key, int x, int y)
 		sideCam = 0;
 	else if ((key == 'd') || (key == 'D'))
 		sideCam = 0;
+	if ((key == 't') || (key == 'T'))
+		torque = false;
+	if ((key == 'f') || (key == 'F'))
+		force = false;
+	if (key == ' ')
+		body.reset();
 }
 
 void specialKeypress(int key, int x, int y) 
@@ -379,7 +376,7 @@ void drawloop(mat4 view, mat4 proj, GLuint framebuffer)
 	vec3 Ls = vec3(1.0f, 1.0f, 1.0f);	//Specular Reflected Light
 	vec3 Ld = vec3(0.99f, 0.99f, 0.99f);	//Diffuse Surface Reflectance
 	vec3 La = vec3(1.0f, 1.0f, 1.0f);	//Ambient Reflected Light
-	vec3 light = vec3(5 * sin(rotateLight), 10, -5.0f*cos(rotateLight));//light source location
+	vec3 light = vec3(5 * sin(0), 10, -5.0f*cos(0));//light source location
 	vec3 coneDirection = light + vec3(0.0f, -1.0f, 0.0f);
 	float coneAngle = 10.0f;
 	// object colour
@@ -412,22 +409,7 @@ void drawloop(mat4 view, mat4 proj, GLuint framebuffer)
 		}
 	}
 
-
-	specular_exponent = 0.3f; //specular exponent - size of the specular elements
-
-	//Particle Fountain Stuff
-	/*
-	for (int i = 0; i < ps.numParticles; i++)
-	{
-		ps.particles[i].evolve();
-		model = identity_mat4();
-		model = scale(model, vec3(ps.particles[i].scale, ps.particles[i].scale, ps.particles[i].scale));
-		model = translate(model, ps.particles[i].position);
-		//drawObject(normalisedShaderID, view, proj, model, light, Ls, ps.particles[i].colour, Ld, vec3(0.8, 0.8, 0.8), vec3(0.1, 0.1, 0.1), ps.particles[i].colour, specular_exponent, cam, ps.particles[i].mesh, NULL, coneDirection, GL_TRIANGLES);
-	}
-	model = scale(identity_mat4(), vec3(2.0, 2.0, 2.0));
-	model = rotate_z_deg(model, 132);
-	model = translate(model, vec3(0.0, 21.0, 0.0));
-	//drawObject(normalisedShaderID, view, proj, model, light, Ls, ps.particles[0].colour, Ld, vec3(0.8, 0.8, 0.8), vec3(0.1, 0.1, 0.1), ps.particles[0].colour, specular_exponent, cam, ps.particles[0].mesh, NULL, coneDirection, GL_TRIANGLES);
-	*/
+	model = body.orientationMat;
+	model = translate(model, body.position);
+	drawObject(normalisedShaderID, view, proj, model, vec3(-light.v[0], -light.v[1], -light.v[2]), Ls, La, Ld, Ks, Ka, GREY, 50.0f, cam, body.mesh, coneAngle, coneDirection, GL_QUADS);	
 }

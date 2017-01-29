@@ -33,14 +33,6 @@ using namespace std;
 #define CUBEMAP_BACK	"-negz.png"
 
 #define TEXTURE_FOLDER "../Textures/"
-/*
-#define CUBEMAP_RIGHT	"../Textures/posx.jpg"
-#define CUBEMAP_LEFT	"../Textures/negx.jpg"
-#define CUBEMAP_TOP		"../Textures/posy.jpg"
-#define CUBEMAP_BOT		"../Textures/negy.jpg"
-#define CUBEMAP_FRONT	"../Textures/posz.jpg"
-#define CUBEMAP_BACK	"../Textures/negz.jpg"
-*/
 
 #pragma region FRAMEBUFFER
 
@@ -137,21 +129,28 @@ class Mesh{
 
 public:
 	Mesh();
-
 	//loading and binding vao and tex
 	bool Mesh::load_mesh(const char* file_name);
 	bool load_texture(const char* file_name, GLuint* tex);
 
 	//whats called from main
 	void init(const char* mesh_file, const char* tex_file, const char* normal_file);
-	void initReflectMap(GLfloat vertices[], int num_vertices, Framebuffer frames[], GLfloat width, GLfloat height);
 	void initCubeMap(GLfloat vertices[], int num_vertices, string texture);
 	void Mesh::loadCubeFace(GLuint textureID, GLenum side, const char* filename);
+	bool Mesh::update_mesh(mat4 orientation, vec3 position);
 	GLuint VAO[20], tex, norm;
 	int mesh_vertex_count;
 
+	GLfloat* points = NULL; // array of vertex points
+	GLfloat* normals = NULL; // array of vertex normals
+	GLfloat* texcoords = NULL; // array of texture coordinates
+	GLfloat* tangents = NULL;
 
+	vector<GLfloat> newpoints; // array of vertex points
+	vector<GLfloat> newnormals; // array of vertex normals
 };
+
+
 
 Mesh::Mesh(){}
 
@@ -247,6 +246,7 @@ bool Mesh::load_mesh(const char* file_name)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
 
+
 		//printf("    %i vertices in mesh[%i]\n", mesh->mNumVertices, i);
 
 		/* pass back number of vertex points in mesh */
@@ -261,10 +261,6 @@ bool Mesh::load_mesh(const char* file_name)
 		structures into pure contiguous arrays before we copy it into data buffers
 		because assimp's texture coordinates are not really contiguous in memory.
 		i allocate some dynamic memory to do this. */
-		GLfloat* points = NULL; // array of vertex points
-		GLfloat* normals = NULL; // array of vertex normals
-		GLfloat* texcoords = NULL; // array of texture coordinates
-		GLfloat* tangents = NULL;
 		if (mesh->HasPositions())
 		{
 			points = (GLfloat*)malloc(mesh_vertex_count * 3 * sizeof(GLfloat));
@@ -274,6 +270,9 @@ bool Mesh::load_mesh(const char* file_name)
 				points[i * 3] = (GLfloat)vp->x;
 				points[i * 3 + 1] = (GLfloat)vp->y;
 				points[i * 3 + 2] = (GLfloat)vp->z;
+				newpoints.push_back(points[i * 3]);
+				newpoints.push_back(points[i * 3 + 1]);
+				newpoints.push_back(points[i * 3 + 2]);
 			}
 		}
 		if (mesh->HasNormals())
@@ -285,6 +284,9 @@ bool Mesh::load_mesh(const char* file_name)
 				normals[i * 3] = (GLfloat)vn->x;
 				normals[i * 3 + 1] = (GLfloat)vn->y;
 				normals[i * 3 + 2] = (GLfloat)vn->z;
+				newnormals.push_back(normals[i * 3]);
+				newnormals.push_back(normals[i * 3 + 1]);
+				newnormals.push_back(normals[i * 3 + 2]);
 			}
 		}
 		if (mesh->HasTextureCoords(0))
@@ -380,6 +382,46 @@ bool Mesh::load_mesh(const char* file_name)
 		
 	}
 	aiReleaseImport(scene);
+	return true;
+}
+
+bool Mesh::update_mesh(mat4 orientation, vec3 position)
+{
+	for (int i = 0; i < mesh_vertex_count; i++)
+	{
+		static vector<GLfloat> initPoints = newpoints;
+		vec3 vertice = vec3(initPoints[i * 3], initPoints[i * 3 + 1], initPoints[i * 3 + 2]);
+		vertice = multiply(orientation, vertice)+position;
+		newpoints[i * 3] = vertice.v[0];
+		newpoints[i * 3 + 1] = vertice.v[1];
+		newpoints[i * 3 + 2] = vertice.v[2];
+
+		static vector<GLfloat> initNormals = newnormals;
+		vertice = vec3(initNormals[i * 3], initNormals[i * 3 + 1], initNormals[i * 3 + 2]);
+		vertice = multiply(orientation, vertice)+position;
+		newnormals[i * 3] = vertice.v[0];
+		newnormals[i * 3 + 1] = vertice.v[1];
+		newnormals[i * 3 + 2] = vertice.v[2];
+	}
+
+
+
+	glBindVertexArray(VAO[0]);
+/* copy mesh data into VBOs */
+	GLuint vbo;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, mesh_vertex_count * 3 * sizeof(GLfloat), newpoints.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(0);
+
+	GLuint vbo2;
+	glGenBuffers(1, &vbo2);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo2);
+	glBufferData(GL_ARRAY_BUFFER, 3 * mesh_vertex_count * sizeof(GLfloat), newnormals.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(1);
+
 	return true;
 }
 

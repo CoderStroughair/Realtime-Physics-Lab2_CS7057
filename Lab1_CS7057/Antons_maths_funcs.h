@@ -214,9 +214,9 @@ struct vec4 {
 struct mat3 {
 	mat3 () {}
 	/* note: entered in COLUMNS */
-	mat3 (float a, float b, float c,
-				float d, float e, float f,
-				float g, float h, float i) {
+	mat3 (	float a, float b, float c,
+			float d, float e, float f,
+			float g, float h, float i) {
 		m[0] = a;
 		m[1] = b;
 		m[2] = c;
@@ -237,10 +237,10 @@ struct mat3 {
 3 7 11 15*/
 struct mat4 {
 	mat4 () {}
-	mat4 (float a, float b, float c, float d,
-				float e, float f, float g, float h,
-				float i, float j, float k, float l,
-				float mm, float n, float o, float p) {
+	mat4 (	float a, float b, float c, float d,
+			float e, float f, float g, float h,
+			float i, float j, float k, float l,
+			float mm, float n, float o, float p) {
 		m[0] = a;
 		m[1] = b;
 		m[2] = c;
@@ -502,30 +502,30 @@ inline mat4 identity_mat4 () {
 // see http://www.euclideanspace.com/maths/algebra/matrix/functions/determinant/fourD/index.htm
 inline float determinant (const mat4& mm) {
 	return
-		mm.m[12] * mm.m[9] * mm.m[6] * mm.m[3] -
-		mm.m[8] * mm.m[13] * mm.m[6] * mm.m[3] -
-		mm.m[12] * mm.m[5] * mm.m[10] * mm.m[3] +
-		mm.m[4] * mm.m[13] * mm.m[10] * mm.m[3] +
-		mm.m[8] * mm.m[5] * mm.m[14] * mm.m[3] -
-		mm.m[4] * mm.m[9] * mm.m[14] * mm.m[3] -
-		mm.m[12] * mm.m[9] * mm.m[2] * mm.m[7] +
-		mm.m[8] * mm.m[13] * mm.m[2] * mm.m[7] +
-		mm.m[12] * mm.m[1] * mm.m[10] * mm.m[7] -
-		mm.m[0] * mm.m[13] * mm.m[10] * mm.m[7] -
-		mm.m[8] * mm.m[1] * mm.m[14] * mm.m[7] +
-		mm.m[0] * mm.m[9] * mm.m[14] * mm.m[7] +
-		mm.m[12] * mm.m[5] * mm.m[2] * mm.m[11] -
-		mm.m[4] * mm.m[13] * mm.m[2] * mm.m[11] -
-		mm.m[12] * mm.m[1] * mm.m[6] * mm.m[11] +
-		mm.m[0] * mm.m[13] * mm.m[6] * mm.m[11] +
-		mm.m[4] * mm.m[1] * mm.m[14] * mm.m[11] -
-		mm.m[0] * mm.m[5] * mm.m[14] * mm.m[11] -
-		mm.m[8] * mm.m[5] * mm.m[2] * mm.m[15] +
-		mm.m[4] * mm.m[9] * mm.m[2] * mm.m[15] +
-		mm.m[8] * mm.m[1] * mm.m[6] * mm.m[15] -
-		mm.m[0] * mm.m[9] * mm.m[6] * mm.m[15] -
-		mm.m[4] * mm.m[1] * mm.m[10] * mm.m[15] +
-		mm.m[0] * mm.m[5] * mm.m[10] * mm.m[15];
+		mm.m[12] * mm.m[9]  * mm.m[6]  * mm.m[3] -
+		mm.m[8]  * mm.m[13] * mm.m[6]  * mm.m[3] -
+		mm.m[12] * mm.m[5]  * mm.m[10] * mm.m[3] +
+		mm.m[4]  * mm.m[13] * mm.m[10] * mm.m[3] +
+		mm.m[8]  * mm.m[5]  * mm.m[14] * mm.m[3] -
+		mm.m[4]  * mm.m[9]  * mm.m[14] * mm.m[3] -
+		mm.m[12] * mm.m[9]  * mm.m[2]  * mm.m[7] +
+		mm.m[8]  * mm.m[13] * mm.m[2]  * mm.m[7] +
+		mm.m[12] * mm.m[1]  * mm.m[10] * mm.m[7] -
+		mm.m[0]  * mm.m[13] * mm.m[10] * mm.m[7] -
+		mm.m[8]  * mm.m[1]  * mm.m[14] * mm.m[7] +
+		mm.m[0]  * mm.m[9]  * mm.m[14] * mm.m[7] +
+		mm.m[12] * mm.m[5]  * mm.m[2]  * mm.m[11] -
+		mm.m[4]  * mm.m[13] * mm.m[2]  * mm.m[11] -
+		mm.m[12] * mm.m[1]  * mm.m[6]  * mm.m[11] +
+		mm.m[0]  * mm.m[13] * mm.m[6]  * mm.m[11] +
+		mm.m[4]  * mm.m[1]  * mm.m[14] * mm.m[11] -
+		mm.m[0]  * mm.m[5]  * mm.m[14] * mm.m[11] -
+		mm.m[8]  * mm.m[5]  * mm.m[2]  * mm.m[15] +
+		mm.m[4]  * mm.m[9]  * mm.m[2]  * mm.m[15] +
+		mm.m[8]  * mm.m[1]  * mm.m[6]  * mm.m[15] -
+		mm.m[0]  * mm.m[9]  * mm.m[6]  * mm.m[15] -
+		mm.m[4]  * mm.m[1]  * mm.m[10] * mm.m[15] +
+		mm.m[0]  * mm.m[5]  *mm.m[10]  * mm.m[15];
 }
 
 /* returns a 16-element array that is the inverse of a 16-element array (4x4

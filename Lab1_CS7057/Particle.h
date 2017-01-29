@@ -41,7 +41,7 @@ public:
 
 	void resolveForce(float delta)
 	{
-		vec3 ac = force*mass;
+		vec3 ac = force/mass;
 		velocity += ac*delta;
 		position += velocity*delta;
 	}
@@ -75,29 +75,155 @@ class RigidBody {
 	vec3 initialposition;
 
 public:
+	//constants
+	float mass;					//m									
+	mat4 ibody;					//									
+	mat4 ibodyInv;				//
+	Mesh mesh;
+
 	vec3 position;				//x(t), ie, the center of mass
-	float mass;					//m									constant quantity
-	mat3 orientationMat;		//R(t)
-	vec3 linMomentum;			//P(t)
+	mat4 orientationMat;		//R(t)
+	vec3 linMomentum;			//P(t) = M*v(t)
+	vec3 angMomentum;			//L(t) = I(t)*w(t)
 
-	mat3 ibody;					//									constant quantity
-	mat3 ibodyInv;				//									constant quantity
 
-	mat3 iInv;
+	mat4 iInv;
 	vec3 velocity;				//Linear Velocity v(t) = P(t) / m
 	vec3 angVelocity;			//w(t)
 	
 	vec3 force;
-	vec3 torque;
+	vec3 torque;				//rho(t) = d/dt L(t) = SUM((pi - x(t))*fi)
+
+	//mat3 inertiaTensor;		//I(t)	- Varies in World Space:	|	Ixx		Ixy		Ixz	|
+								//									|	Iyx		Iyy		Iyz	|
+								//									|	Izx		Izy		Izz	|
+								//Diagonal Terms:	Ixx = M * IntegralOverV (Y^2 + z^2) dV
+								//Off-Diagonal:		Ixy = -M * IntegralOverV (x*y) dV
+								//Body Space - I(t) = R(t)IbodyR(T)^T
 
 	//Rate of change of Orientation = w(t)*R(t)  = (d/dt)R(t) = |	 0		-wz(t)	 wy(t)	0	|
 	//															|	 wz(t)	 0		-wx(t)	0	|	*	R(t)
 	//															|	-wy(t)	 wx(t)	 0		0	|
 	//															|	 0		 0		 0		0	|
 	
+	RigidBody() {};
+	RigidBody(vec3 x, vec3 P, vec3 L, float m, float h, float d, float w, Mesh _mesh) 
+	{
+		initialposition = x;
+
+		float a = (1 / 12.0f) * m;
+		ibody = mat4(a*(h*h+d*d),	0.0f,			0.0f,			0.0f,
+						0.0f,		a*(w*w+d*d),	0.0f,			0.0f,
+						0.0f,		0.0f,			a*(w*w+h*h),	0.0f,
+						0.0f,		0.0f,			0.0f,			1.0f);
+		ibodyInv = inverse(ibody);
+		mass = m;
+		mesh = _mesh;
+
+		position = x;
+		orientationMat = identity_mat4();
+		linMomentum = P;
+		angMomentum = L;
+		
+		velocity = linMomentum / mass;
+		iInv = orientationMat * ibodyInv * transpose(orientationMat);
+		angVelocity = multiply(iInv, angMomentum);
+
+		force = vec3(0.0, 0.0, 0.0);
+		torque = vec3(0.0, 0.0, 0.0);
+	}
+
 	void addForce(vec3 f, vec3 location)
 	{
+		force += f;
+		torque += cross(location, force);
+	}
 
+	void resolveForce(float delta)
+	{
+		if (force.v[0])
+			cout <<"";
+		linMomentum *= 0.8;
+		angMomentum *= 0.8;
+		linMomentum += force*delta;
+		angMomentum += torque*delta;
+
+		velocity = linMomentum / mass;
+		iInv = orientationMat * ibodyInv * transpose(orientationMat);
+		angVelocity = multiply(iInv, angMomentum);
+
+		mat4 rDot = star(angVelocity*delta)*orientationMat;
+		orientationMat.m[0] += rDot.m[0];
+		orientationMat.m[1] += rDot.m[1];
+		orientationMat.m[2] += rDot.m[2];
+		orientationMat.m[3] = 0;
+
+		orientationMat.m[4] += rDot.m[4];
+		orientationMat.m[5] += rDot.m[5];
+		orientationMat.m[6] += rDot.m[6];
+		orientationMat.m[7] = 0;
+
+		orientationMat.m[8] += rDot.m[8];
+		orientationMat.m[9] += rDot.m[9];
+		orientationMat.m[10] += rDot.m[10];
+		orientationMat.m[11] = 0;
+
+		orientationMat.m[12] += rDot.m[12];
+		orientationMat.m[13] += rDot.m[13];
+		orientationMat.m[14] += rDot.m[14];
+		orientationMat.m[15] = 1;
+
+		//Orthonormalisation
+		vec3 Cx = vec3(orientationMat.m[0], orientationMat.m[1], orientationMat.m[2]) / length(vec3(orientationMat.m[0], orientationMat.m[1], orientationMat.m[2]));
+		vec3 Cz = vec3(orientationMat.m[8], orientationMat.m[9], orientationMat.m[10]);
+		vec3 Cy = cross(Cz, Cx);
+		Cy = Cy / length(Cy);
+		Cz = cross(Cx, Cy);
+		Cz = Cz / length(Cz);
+		orientationMat.m[0] = Cx.v[0];
+		orientationMat.m[1] = Cx.v[1];
+		orientationMat.m[2] = Cx.v[2];
+
+		orientationMat.m[4] = Cy.v[0];
+		orientationMat.m[5] = Cy.v[1];
+		orientationMat.m[6] = Cy.v[2];
+
+		orientationMat.m[8] = Cz.v[0];
+		orientationMat.m[9] = Cz.v[1];
+		orientationMat.m[10]= Cz.v[2];
+
+		position += velocity * delta;
+
+		if (force.v[0])
+			cout << "";
+
+		//mesh.update_mesh(orientationMat, position);
+	}
+
+	mat4 star(vec3& a)
+	{
+		mat4 star = mat4(
+			 0,		-a.v[2],	 a.v[1],	0,
+			 a.v[2], 0,			-a.v[0],	0,
+			-a.v[1], a.v[0],	 0,			0,
+			 0,		 0,			 0,			0
+		);
+		return transpose(star);	//converting matrix into Anton's poxy way of doing things.
+	}
+
+	void reset()
+	{
+		position = initialposition;
+		orientationMat = identity_mat4();
+		linMomentum = vec3(0.0, 0.0, 0.0);
+		angMomentum = vec3(0.0, 0.0, 0.0);
+
+		velocity = linMomentum / mass;
+		iInv = orientationMat * ibodyInv * transpose(orientationMat);
+		angVelocity = multiply(iInv, angMomentum);
+
+		force = vec3(0.0, 0.0, 0.0);
+		torque = vec3(0.0, 0.0, 0.0);
 	}
 };
 
@@ -108,7 +234,8 @@ public:
 
 class Drag : public Force {
 public:
-	void applyForce(Particle& p) {
+	void applyForce(Particle& p) 
+	{
 		GLfloat constants = 0.5 * 1.225 * 0.47 * 3.14 * (0.1*p.scale) * (0.1*p.scale);
 		vec3 velocity = vec3(p.velocity.v[0] * p.velocity.v[0], p.velocity.v[1] * p.velocity.v[1], p.velocity.v[2] * p.velocity.v[2]);
 		p.addForce(velocity*constants);
@@ -118,12 +245,12 @@ public:
 
 class Gravity : public Force {
 public:
-	void applyForce(Particle& p) {
+	void applyForce(Particle& p) 
+	{
 		float force_gravity = -9.81f*p.mass;
 		p.addForce(vec3(0.0, force_gravity, 0.0));
 	};
 };
-
 
 class ParticleSystem {
 public:
