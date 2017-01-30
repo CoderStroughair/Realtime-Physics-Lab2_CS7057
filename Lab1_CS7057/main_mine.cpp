@@ -7,7 +7,7 @@
 
 using namespace std;
 
-const float width = 800, height = 800;
+const float width = 1200, height = 950;
 /*----------------------------------------------------------------------------
 						MESH AND TEXTURE VARIABLES
 ----------------------------------------------------------------------------*/
@@ -29,7 +29,7 @@ const float width = 800, height = 800;
 
 #define BEAR_TEXTURE	"../Textures/bear.tga"
 #define BEAR_TEXTURE2	"../Textures/bear2.tga"
-#define CUBE_TEXTURE	"../Textures/cubemap.png"
+#define CUBE_TEXTURE	"../Textures/me.png"
 #define REFLECT_TEXTURE	"../Textures/reflection.png"
 #define REFRACT_TEXTURE	"../Textures/refraction.png"
 #define NORMAL_TEXTURE	"../Textures/normalmapped.png"
@@ -142,6 +142,8 @@ int textID = -1;
 void drawloop(mat4 view, mat4 proj, GLuint framebuffer);
 bool torque = false;
 bool force = false;
+bool gravity = false;
+bool force1 = false, force2 = false;
 
 /*--------------------------------------------------------------------------*/
 
@@ -180,7 +182,7 @@ void init()
 	sphere_object.init(SPHERE_MESH);
 	gem_object.init(GEM_MESH);
 	particle_object.init(GEM_MESH);
-	cube_object.init(CUBE_MESH);
+	cube_object.init(CUBE_MESH, BEAR_TEXTURE);
 
 	body = RigidBody(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0), 5, 1.0, 1.0, 1.0, cube_object);
 }
@@ -195,7 +197,7 @@ void display()
 	proj = perspective(60.0, (float)width / (float)height, 1, 1000.0);
 	glViewport(0, 0, width, height);
 	drawloop(view, proj, 0);
-	//draw_texts();
+	draw_texts();
 	glutSwapBuffers();
 }
 
@@ -220,13 +222,53 @@ void updateScene() {
 
 		body.force = vec3(0.0, 0.0, 0.0);
 		body.torque = vec3(0.0, 0.0, 0.0);
-		body.addForce(vec3(50.0, 0.0, 0.0)*torque, vec3(0.5, 0.0, 0.5));
-		body.addForce(vec3(2.0, 50.0, 0.0)*force, vec3(0.0, 1.0, 0.0));
+		body.addForce(vec3(50.0, 0.0, 0.0)*force1, vec3(0.5, 0.0, 0.5));
+		body.addForce(vec3(2.0, 50.0, 0.0)*force2, vec3(0.0, 1.0, 0.0));
+		if (gravity)
+		{
+			body.addForce(vec3(0.0, -98.0, 0.0), vec3(0.0, -1.0, 0.0));
+		}
+		if (torque)
+			body.torque = vec3(50.0, 0.0, 0.0);
+		if (force)
+			body.force = vec3(0.0, 50.0, 0.0);
 		cam.movForward(frontCam*speed);
 		cam.movRight(sideCam*speed);
 		cam.changeFront(pitCam, yawCam, rolCam);
 
 		body.resolveForce(delta);
+		string values = "Force: [" + to_string(body.force.v[0]) + ", " + to_string(body.force.v[1]) + ", " + to_string(body.force.v[2]) + "]\n";
+		values += "Torque: [" + to_string(body.torque.v[0]) + ", " + to_string(body.torque.v[1]) + ", " + to_string(body.torque.v[2]) + "]\n";
+		values += "Linear Momentum: [" + to_string(body.linMomentum.v[0]) + ", " + to_string(body.linMomentum.v[1]) + ", " + to_string(body.linMomentum.v[2]) + "]\n";
+		values += "Angular Momentum: [" + to_string(body.angMomentum.v[0]) + ", " + to_string(body.angMomentum.v[1]) + ", " + to_string(body.angMomentum.v[2]) + "]\n";
+		values += "\n";
+		values += "Orientation Matrix: \n|"+ to_string(body.orientationMat.m[0]) + ", " + to_string(body.orientationMat.m[4]) + ", " + to_string(body.orientationMat.m[8]) + "|\n";
+		values += "|" + to_string(body.orientationMat.m[1]) + ", " + to_string(body.orientationMat.m[5]) + ", " + to_string(body.orientationMat.m[9]) + "|\n";
+		values += "|" + to_string(body.orientationMat.m[2]) + ", " + to_string(body.orientationMat.m[6]) + ", " + to_string(body.orientationMat.m[10]) + "|\n";
+		values += "\n";
+
+		values += "Vertices: \n";
+		vector<float> vertices;
+		for (int i = 0; i < body.mesh.newpoints.size(); i=i+3)
+		{
+			vertices.push_back(body.mesh.newpoints[i]);
+			vertices.push_back(body.mesh.newpoints[i+1]);
+			vertices.push_back(body.mesh.newpoints[i+2]);
+			bool add = true;
+			for (int j = 0; j < i; j=j+3)
+			{
+				if ((vertices[i] == vertices[j]) && (vertices[i+1] == vertices[j+1]) && (vertices[i+2] == vertices[j+2]))
+				{
+					add = false;
+					break;
+				}
+			}
+			if (add)
+				values += "[" + to_string(body.mesh.newpoints[i]) + "," + to_string(body.mesh.newpoints[i+1]) + "," + to_string(body.mesh.newpoints[i+2]) + "]\n";
+		}
+		values += "\n";
+
+		update_text(textID, values.c_str());
 	}
 	
 }
@@ -251,6 +293,10 @@ void keypress(unsigned char key, int x, int y)
 		torque = true;
 	if ((key == 'f') || (key == 'F'))
 		force = true;
+	if (key == '1')
+		force1 = true;
+	if (key == '2')
+		force2 = true;
 }
 
 void keypressUp(unsigned char key, int x, int y)
@@ -267,8 +313,25 @@ void keypressUp(unsigned char key, int x, int y)
 		torque = false;
 	if ((key == 'f') || (key == 'F'))
 		force = false;
+	if (key == '1')
+		force1 = false;
+	if (key == '2')
+		force2 = false;
 	if (key == ' ')
-		body.reset();
+	{
+		gravity = false;
+		body.reset(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0));
+	}
+	else if (key == '\\')
+	{
+		gravity = false;
+		body.reset(vec3(0.0, 0.0, 0.0), vec3(500.0, 500.0, 500.0));
+	}
+	else if (key == 'g')
+	{
+		gravity = true;
+		body.reset(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0));
+	}
 }
 
 void specialKeypress(int key, int x, int y) 
@@ -354,9 +417,8 @@ int main(int argc, char** argv) {
 	}
 
 	init();
-	textID = add_text(
-		"Simplified Version - This only shows a single cubemap",
-		-0.9, 0.8, fontSize, 1.0f, 1.0f, 1.0f, 1.0f);
+	textID = add_text("",
+		-0.95, 0.9, fontSize, 1.0f, 1.0f, 1.0f, 1.0f);
 	glutMainLoop();
 	return 0;
 }
@@ -373,10 +435,10 @@ void drawloop(mat4 view, mat4 proj, GLuint framebuffer)
 	mat4 model;
 	model = identity_mat4();
 	// light properties
-	vec3 Ls = vec3(1.0f, 1.0f, 1.0f);	//Specular Reflected Light
+	vec3 Ls = vec3(0.5f, 0.5f, 0.5f);	//Specular Reflected Light
 	vec3 Ld = vec3(0.99f, 0.99f, 0.99f);	//Diffuse Surface Reflectance
 	vec3 La = vec3(1.0f, 1.0f, 1.0f);	//Ambient Reflected Light
-	vec3 light = vec3(5 * sin(0), 10, -5.0f*cos(0));//light source location
+	vec3 light = vec3(5 * sin(rotateLight), 10, -5.0f*cos(rotateLight));//light source location
 	vec3 coneDirection = light + vec3(0.0f, -1.0f, 0.0f);
 	float coneAngle = 10.0f;
 	// object colour
@@ -393,7 +455,8 @@ void drawloop(mat4 view, mat4 proj, GLuint framebuffer)
 	drawObject(noTextureShaderID, view, proj, model, light, Ls, La, Ld, Ks, Ka, WHITE, specular_exponent, cam, cube, coneAngle, coneDirection, GL_TRIANGLES);
 
 	model = translate(identity_mat4(), vec3(0.0f, -6.3f, 0.0f));
-	drawObject(noTextureShaderID, view, proj, model, light, Ls, La, Ld, Ks, Ka, Kd, specular_exponent, cam, torch_object, coneAngle, coneDirection, GL_QUADS);
+	if(!gravity)
+		drawObject(noTextureShaderID, view, proj, model, light, Ls, La, Ld, Ks, Ka, Kd, specular_exponent, cam, torch_object, coneAngle, coneDirection, GL_QUADS);
 
 
 	model = rotate_z_deg(identity_mat4(), 90.0f);
@@ -405,11 +468,12 @@ void drawloop(mat4 view, mat4 proj, GLuint framebuffer)
 		{
 			model = translate(root, vec3(15.0f*i, 0.0, 0.0));
 			model = translate(model, vec3(0.0, 0.0, 15.0f*j));
-			drawObject(normalisedShaderID, view, proj, model, vec3(-light.v[0], -light.v[1], -light.v[2]), Ls, La, Ld, Ks, Ka, GREY, 50.0f, cam, wall_object, coneAngle, coneDirection, GL_TRIANGLES);
+			if (!gravity)
+				drawObject(normalisedShaderID, view, proj, model, vec3(-light.v[0], -light.v[1], -light.v[2]), Ls, La, Ld, Ks, Ka, GREY, 50.0f, cam, wall_object, coneAngle, coneDirection, GL_TRIANGLES);
 		}
 	}
 
-	model = body.orientationMat;
-	model = translate(model, body.position);
-	drawObject(normalisedShaderID, view, proj, model, vec3(-light.v[0], -light.v[1], -light.v[2]), Ls, La, Ld, Ks, Ka, GREY, 50.0f, cam, body.mesh, coneAngle, coneDirection, GL_QUADS);	
+	//model = body.orientationMat;
+	//model = translate(model, body.position);
+	drawObject(noTextureShaderID, view, proj, identity_mat4(), vec3(-light.v[0], -light.v[1], -light.v[2]), Ls, La, Ld, Ks, Ka, BLUE, 50.0f, cam, body.mesh, coneAngle, coneDirection, GL_QUADS);
 }

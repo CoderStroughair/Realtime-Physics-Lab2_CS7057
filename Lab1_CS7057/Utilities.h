@@ -141,10 +141,6 @@ public:
 	GLuint VAO[20], tex, norm;
 	int mesh_vertex_count;
 
-	GLfloat* points = NULL; // array of vertex points
-	GLfloat* normals = NULL; // array of vertex normals
-	GLfloat* texcoords = NULL; // array of texture coordinates
-	GLfloat* tangents = NULL;
 
 	vector<GLfloat> newpoints; // array of vertex points
 	vector<GLfloat> newnormals; // array of vertex normals
@@ -246,7 +242,10 @@ bool Mesh::load_mesh(const char* file_name)
 	{
 		const aiMesh* mesh = scene->mMeshes[i];
 
-
+		GLfloat* points = NULL; // array of vertex points
+		GLfloat* normals = NULL; // array of vertex normals
+		GLfloat* texcoords = NULL; // array of texture coordinates
+		GLfloat* tangents = NULL;
 		//printf("    %i vertices in mesh[%i]\n", mesh->mNumVertices, i);
 
 		/* pass back number of vertex points in mesh */

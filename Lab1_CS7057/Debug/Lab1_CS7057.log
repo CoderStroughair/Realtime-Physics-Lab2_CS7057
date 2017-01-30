@@ -36,7 +36,7 @@ u:\lab2_cs7057 (physics)\lab1_cs7057\teapot.h(5959): warning C4838: conversion f
 u:\lab2_cs7057 (physics)\lab1_cs7057\teapot.h(5959): warning C4305: 'initializing': truncation from 'double' to 'float'
 u:\lab2_cs7057 (physics)\lab1_cs7057\teapot.h(8938): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
 u:\lab2_cs7057 (physics)\lab1_cs7057\teapot.h(8938): warning C4305: 'initializing': truncation from 'double' to 'float'
-u:\lab2_cs7057 (physics)\lab1_cs7057\utilities.h(245): warning C4018: '<': signed/unsigned mismatch
+u:\lab2_cs7057 (physics)\lab1_cs7057\utilities.h(241): warning C4018: '<': signed/unsigned mismatch
 u:\lab2_cs7057 (physics)\lab1_cs7057\particle.h(29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 u:\lab2_cs7057 (physics)\lab1_cs7057\particle.h(33): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 u:\lab2_cs7057 (physics)\lab1_cs7057\particle.h(53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
@@ -45,12 +45,12 @@ u:\lab2_cs7057 (physics)\lab1_cs7057\particle.h(147): warning C4305: 'argument':
 u:\lab2_cs7057 (physics)\lab1_cs7057\particle.h(239): warning C4244: 'initializing': conversion from 'double' to 'GLfloat', possible loss of data
 u:\lab2_cs7057 (physics)\lab1_cs7057\particle.h(300): warning C4305: 'initializing': truncation from 'double' to 'float'
 u:\lab2_cs7057 (physics)\lab1_cs7057\particle.h(305): warning C4305: 'argument': truncation from 'double' to 'float'
-u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(150): warning C4244: 'argument': conversion from 'const float' to 'int', possible loss of data
-u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(192): warning C4244: 'argument': conversion from 'const float' to 'GLsizei', possible loss of data
-u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(196): warning C4244: 'argument': conversion from 'const float' to 'GLsizei', possible loss of data
-u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(331): warning C4244: 'argument': conversion from 'const float' to 'int', possible loss of data
-u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(337): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(359): warning C4305: 'argument': truncation from 'double' to 'float'
-u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(379): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(152): warning C4244: 'argument': conversion from 'const float' to 'int', possible loss of data
+u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(194): warning C4244: 'argument': conversion from 'const float' to 'GLsizei', possible loss of data
+u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(198): warning C4244: 'argument': conversion from 'const float' to 'GLsizei', possible loss of data
+u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(252): warning C4018: '<': signed/unsigned mismatch
+u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(394): warning C4244: 'argument': conversion from 'const float' to 'int', possible loss of data
+u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(400): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+u:\lab2_cs7057 (physics)\lab1_cs7057\main_mine.cpp(421): warning C4305: 'argument': truncation from 'double' to 'float'
   Lab1_CS7057.vcxproj -> U:\Lab2_CS7057 (Physics)\Debug\Lab1_CS7057.exe
   Lab1_CS7057.vcxproj -> U:\Lab2_CS7057 (Physics)\Debug\Lab1_CS7057.pdb (Full PDB)

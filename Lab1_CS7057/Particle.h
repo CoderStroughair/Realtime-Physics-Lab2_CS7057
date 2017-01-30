@@ -143,8 +143,8 @@ public:
 	{
 		if (force.v[0])
 			cout <<"";
-		linMomentum *= 0.8;
-		angMomentum *= 0.8;
+		linMomentum *= 0.95;
+		angMomentum *= 0.95;
 		linMomentum += force*delta;
 		angMomentum += torque*delta;
 
@@ -197,7 +197,7 @@ public:
 		if (force.v[0])
 			cout << "";
 
-		//mesh.update_mesh(orientationMat, position);
+		mesh.update_mesh(orientationMat, position);
 	}
 
 	mat4 star(vec3& a)
@@ -211,12 +211,12 @@ public:
 		return transpose(star);	//converting matrix into Anton's poxy way of doing things.
 	}
 
-	void reset()
+	void reset(vec3 l, vec3 a)
 	{
 		position = initialposition;
 		orientationMat = identity_mat4();
-		linMomentum = vec3(0.0, 0.0, 0.0);
-		angMomentum = vec3(0.0, 0.0, 0.0);
+		linMomentum = l;
+		angMomentum = a;
 
 		velocity = linMomentum / mass;
 		iInv = orientationMat * ibodyInv * transpose(orientationMat);

@@ -438,7 +438,7 @@ inline float get_squared_dist (vec3 from, vec3 to) {
 inline vec3 multiply(const mat4& a, const vec3& b){
 	vec3 result = vec3(0.0, 0.0, 0.0);
 	for (int i = 0; i<3; i++) {
-		result.v[i] = dot(vec3(a.m[i * 3], a.m[i * 3 + 1], a.m[i * 3 + 2]), b);
+		result.v[i] = dot(vec3(a.m[i * 4], a.m[i * 4 + 1], a.m[i * 4 + 2]), b);
 	}
 	return result;
 }
